@@ -274,17 +274,18 @@ class Camera {
         this.isCalibrating = false
         this.calibrationPoints = []
         cam.up = gizmoRenderer.planeNormal
-        const R = rotateAlign(gizmoRenderer.planeNormal, [0, 1, 0])
-        cam.sceneRotationMatrix = R
+        cam.sceneRotationMatrix = rotateAlign(gizmoRenderer.planeNormal, [0, 1, 0])
 
-        // Row-major rotation that maps scene up to Y-up; apply to .ply points so gravity = [0,-1,0].
+        // The viewer's pipeline flips Y, so cam.up actually points along gravity in raw PLY
+        // coords. Rotate it to -Z so true up lands at +Z in the export (FLU/NWU, Z-up).
+        const Rz = rotateAlign(gizmoRenderer.planeNormal, [0, 0, -1])
         const matrix = [
-            [R[0], R[1], R[2]],
-            [R[3], R[4], R[5]],
-            [R[6], R[7], R[8]]
+            [Rz[0], Rz[1], Rz[2]],
+            [Rz[3], Rz[4], Rz[5]],
+            [Rz[6], Rz[7], Rz[8]]
         ]
         console.log('[Calibration]', JSON.stringify(matrix, null, 2))
-        prompt('Rotation to Y-up (Ctrl+C to copy):', JSON.stringify(matrix))
+        prompt('Rotation to Z-up / FLU (Ctrl+C to copy):', JSON.stringify(matrix))
 
         requestRender()
     }
